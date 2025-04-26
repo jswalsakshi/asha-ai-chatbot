@@ -231,6 +231,7 @@ SECONDARY_COLOR = "#B987A9"  # Light version of the main color
 ACCENT_COLOR = "#694057"  # Darker version of the main color
 BACKGROUND_COLOR = "#F5EDF2"  # Very light version of the main color
 TEXT_COLOR = "#263238"  # Kept dark text
+CHATBOT_BG_COLOR = "#A9C97D"  # Light green for chatbot messages
 
 # Custom CSS
 st.markdown(f"""
@@ -610,21 +611,19 @@ elif user_id:  # Only show the chat interface if logged in
     # Display messages
     for i, msg in enumerate(st.session_state.messages):
         is_user = msg["role"] == "user"
-        avatar = "👩" if is_user else "🤖"
-        color = SECONDARY_COLOR if is_user else PRIMARY_COLOR
         
         # Handle messages with HTML content (like resume download links)
         if not is_user and "<a href" in msg["content"]:
-            with st.chat_message("assistant", avatar="🤖"):
+            with st.chat_message("assistant", avatar="https://cdn-icons-png.flaticon.com/512/4712/4712027.png"):
                 st.markdown(msg["content"], unsafe_allow_html=True)
         else:
-            message(
-                msg["content"],
-                is_user=is_user,
-                avatar_style="adventurer" if is_user else "bottts",
-                seed="Aneka" if is_user else "Asha",
-                key=f"msg_{i}"
-            )
+            # Define avatar URLs
+            bot_avatar_url = "https://cdn-icons-png.flaticon.com/512/4712/4712027.png"  
+            user_avatar_url = "https://cdn-icons-png.flaticon.com/512/4140/4140047.png"  
+            
+            # Use Streamlit's native chat_message component instead of streamlit_chat
+            with st.chat_message(msg["role"], avatar=user_avatar_url if is_user else bot_avatar_url):
+                st.markdown(msg["content"])
    
     # Chat input - ONLY ONE INSTANCE placed here inside the user_id check
     user_input = st.chat_input("Type your message here...")
