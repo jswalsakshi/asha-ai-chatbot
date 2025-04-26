@@ -487,27 +487,26 @@ if 'show_login' in st.session_state and st.session_state.show_login:
     st.markdown("</div>", unsafe_allow_html=True)
 elif user_id:  # Only show the chat interface if logged in
     # Show user info if logged in
-    st.markdown(f"""
-        <div class='user-header'>
-            <div>
+    header_col1, header_col2 = st.columns([5, 1])
+    with header_col1:
+        st.markdown(f"""
+            <div style='padding: 10px 15px;'>
                 <span style='font-weight:bold;'>👤 {st.session_state.get('username', 'User')}</span>
             </div>
-            <div>
-                <span style='cursor:pointer;color:{PRIMARY_COLOR};' onclick='logout()'>Log Out</span>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Add JavaScript for logout
-    st.markdown("""
-        <script>
-            function logout() {
-                // Remove user_id from URL and reload
-                window.history.pushState({}, '', '/');
-                window.location.reload();
-            }
-        </script>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+    with header_col2:
+        # Red power icon button for logout
+        if st.button("⏻", key="logout_button", help="Logout", 
+                    type="secondary", use_container_width=True):
+            # Clear session state
+            st.session_state.user_id = None
+            st.session_state.username = None
+            st.session_state.show_login = True
+            st.session_state.messages = []
+            # Reset URL parameters
+            st.query_params.clear()
+            st.rerun()
     
     # Context tabs inside chat area
     col1, col2, col3, col4, col5 = st.columns(5)
