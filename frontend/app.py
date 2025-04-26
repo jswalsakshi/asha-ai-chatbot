@@ -611,17 +611,17 @@ elif user_id:  # Only show the chat interface if logged in
     for i, msg in enumerate(st.session_state.messages):
         is_user = msg["role"] == "user"
         
-        # Handle messages with HTML content (like resume download links)
-        if not is_user and "<a href" in msg["content"]:
-            with st.chat_message("assistant", avatar="https://cdn-icons-png.flaticon.com/512/4712/4712027.png"):
+        # Define avatar URLs
+        bot_avatar_url = "https://cdn-icons-png.flaticon.com/512/4712/4712027.png"  
+        user_avatar_url = "https://cdn-icons-png.flaticon.com/512/4140/4140047.png"  
+        
+        # Use Streamlit's native chat_message component
+        with st.chat_message(msg["role"], avatar=user_avatar_url if is_user else bot_avatar_url):
+            # Always use st.markdown with unsafe_allow_html=True for assistant messages
+            # that might contain HTML (especially download links)
+            if not is_user:
                 st.markdown(msg["content"], unsafe_allow_html=True)
-        else:
-            # Define avatar URLs
-            bot_avatar_url = "https://cdn-icons-png.flaticon.com/512/4712/4712027.png"  
-            user_avatar_url = "https://cdn-icons-png.flaticon.com/512/4140/4140047.png"  
-            
-            # Use Streamlit's native chat_message component instead of streamlit_chat
-            with st.chat_message(msg["role"], avatar=user_avatar_url if is_user else bot_avatar_url):
+            else:
                 st.markdown(msg["content"])
    
     # Chat input - ONLY ONE INSTANCE placed here inside the user_id check
@@ -778,7 +778,7 @@ elif user_id:  # Only show the chat interface if logged in
                                             download_link = get_pdf_download_link(pdf_path, pdf_filename)
                                             
                                             # Add message with download link
-                                            response = f"Great! I've created your resume based on the information you provided. Here's your resume PDF:\n\n{download_link}\n\nIs there anything else you'd like me to help you with?"
+                                            response = f"Great! I've created your resume based on the information you provided. Here's your resume PDF:<br><br>{download_link}<br><br>Is there anything else you'd like me to help you with?"
                                             
                                         except Exception as e:
                                             import traceback
@@ -806,7 +806,7 @@ elif user_id:  # Only show the chat interface if logged in
                                         download_link = get_pdf_download_link(pdf_path, pdf_filename)
                                         
                                         # Add message with download link
-                                        response = f"Great! I've created your resume based on the information you provided. Here's your resume PDF:\n\n{download_link}\n\nIs there anything else you'd like me to help you with?"
+                                        response = f"Great! I've created your resume based on the information you provided. Here's your resume PDF:<br><br>{download_link}<br><br>Is there anything else you'd like me to help you with?"
                                         
                                         # Reset resume mode
                                         st.session_state.resume_mode = False

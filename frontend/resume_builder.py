@@ -326,6 +326,7 @@ def main():
     # Display chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
+            st.markdown(message["content"], unsafe_allow_html=True)
             if "<a href" in message["content"]:
                 st.markdown(message["content"], unsafe_allow_html=True)
             else:
