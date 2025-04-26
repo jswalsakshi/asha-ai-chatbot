@@ -1,0 +1,7 @@
+job_title,company,location,job_type,skills,apply_link
+Data Scientist,Google,Bangalore,Full-time,"Python, Machine Learning, SQL",https://careers.google.com/job1
+Backend Developer,Microsoft,Hyderabad,Full-time,"Node.js, MongoDB, Express",https://microsoft.com/job2
+Frontend Developer,Zoho,Remote,Internship,"HTML, CSS, React",https://zoho.com/job3
+Project Manager,TCS,Chennai,Full-time,"Agile, Scrum, Leadership",https://tcs.com/job4
+UI/UX Designer,Wipro,Pune,Contract,"Figma, Adobe XD, Creativity",https://wipro.com/job5
+AI Research Intern,NVIDIA,Bangalore,Internship,"Deep Learning, PyTorch, Python",https://nvidia.com/job6

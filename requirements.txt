@@ -1,0 +1,7 @@
+streamlit
+openai  # or huggingface_hub
+faiss-cpu
+sentence-transformers
+numpy
+python-dotenv
+streamlit_chat

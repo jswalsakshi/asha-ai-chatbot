@@ -1,0 +1,35 @@
+[
+    {
+        "title": "Women in Tech Mentorship",
+        "speaker": "Ananya R., Senior Engineer at Amazon",
+        "location": "Online",
+        "date": "2024-07-12",
+        "topics": [
+            "Career Growth",
+            "Engineering",
+            "Networking"
+        ]
+    },
+    {
+        "title": "Resume Building for Career Returners",
+        "speaker": "Divya M., HR Lead at Infosys",
+        "location": "Bangalore",
+        "date": "2024-08-01",
+        "topics": [
+            "Resume Tips",
+            "Confidence",
+            "Job Market"
+        ]
+    },
+    {
+        "title": "Founders Circle: Women Entrepreneurs",
+        "speaker": "Priya S., Founder of HerStartup",
+        "location": "Delhi",
+        "date": "2024-09-20",
+        "topics": [
+            "Startups",
+            "Pitching",
+            "Leadership"
+        ]
+    }
+]

@@ -1,0 +1,147 @@
+2025-04-19 11:11:49,339 - ASHA_Chatbot - INFO - Database setup complete
+2025-04-19 11:16:52,228 - WDM - INFO - ====== WebDriver manager ======
+2025-04-19 11:16:52,430 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-19 11:16:52,531 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-19 11:16:52,610 - WDM - INFO - There is no [mac64] chromedriver "135.0.7049.95" for browser google-chrome "135.0.7049" in cache
+2025-04-19 11:16:52,622 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-19 11:16:52,847 - WDM - INFO - WebDriver version 135.0.7049.95 selected
+2025-04-19 11:16:52,848 - WDM - INFO - Modern chrome version https://storage.googleapis.com/chrome-for-testing-public/135.0.7049.95/mac-arm64/chromedriver-mac-arm64.zip
+2025-04-19 11:16:52,848 - WDM - INFO - About to download new driver from https://storage.googleapis.com/chrome-for-testing-public/135.0.7049.95/mac-arm64/chromedriver-mac-arm64.zip
+2025-04-19 11:16:53,236 - WDM - INFO - Driver downloading response is 200
+2025-04-19 11:16:54,021 - WDM - INFO - Get LATEST chromedriver version for google-chrome
+2025-04-19 11:16:54,178 - WDM - INFO - Driver has been saved in cache [/Users/sakshi.jaiswal/.wdm/drivers/chromedriver/mac64/135.0.7049.95]
+2025-04-19 11:16:55,922 - ASHA_Chatbot - INFO - Selenium WebDriver initialized
+2025-04-19 11:16:55,923 - ASHA_Chatbot - INFO - Scraping page 1: https://www.herkey.com/jobs?page=1
+2025-04-19 11:17:12,385 - ASHA_Chatbot - ERROR - Error scraping page 1: Message: 
+Stacktrace:
+0   chromedriver                        0x0000000104ed6e10 cxxbridge1$str$ptr + 2817040
+1   chromedriver                        0x0000000104ecf0ac cxxbridge1$str$ptr + 2784940
+2   chromedriver                        0x0000000104a168d8 cxxbridge1$string$len + 93028
+3   chromedriver                        0x0000000104a5d6a0 cxxbridge1$string$len + 383276
+4   chromedriver                        0x0000000104a9e7b8 cxxbridge1$string$len + 649796
+5   chromedriver                        0x0000000104a51a80 cxxbridge1$string$len + 335116
+6   chromedriver                        0x0000000104e9bc98 cxxbridge1$str$ptr + 2575000
+7   chromedriver                        0x0000000104e9ef64 cxxbridge1$str$ptr + 2588004
+8   chromedriver                        0x0000000104e7ba20 cxxbridge1$str$ptr + 2443296
+9   chromedriver                        0x0000000104e9f7e0 cxxbridge1$str$ptr + 2590176
+10  chromedriver                        0x0000000104e6cb14 cxxbridge1$str$ptr + 2382100
+11  chromedriver                        0x0000000104ebf9c4 cxxbridge1$str$ptr + 2721732
+12  chromedriver                        0x0000000104ebfb50 cxxbridge1$str$ptr + 2722128
+13  chromedriver                        0x0000000104ececf8 cxxbridge1$str$ptr + 2783992
+14  libsystem_pthread.dylib             0x000000019b1eaf94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000019b1e5d34 thread_start + 8
+
+2025-04-19 11:17:12,386 - ASHA_Chatbot - INFO - Total jobs scraped: 0
+2025-04-19 11:17:12,388 - ASHA_Chatbot - INFO - Stored 0 new jobs to database
+2025-04-19 11:17:12,495 - ASHA_Chatbot - INFO - Selenium WebDriver closed
+2025-04-19 11:32:56,511 - ASHA_Chatbot - INFO - Database setup complete
+2025-04-19 11:33:01,221 - undetected_chromedriver.patcher - INFO - patching driver executable /Users/sakshi.jaiswal/Library/Application Support/undetected_chromedriver/undetected_chromedriver
+2025-04-19 11:33:03,710 - ASHA_Chatbot - INFO - Undetected ChromeDriver initialized successfully
+2025-04-19 11:33:03,710 - ASHA_Chatbot - INFO - Attempting to scrape with requests first
+2025-04-19 11:33:04,132 - ASHA_Chatbot - INFO - Scraping dynamic page 1: https://www.herkey.com/jobs
+2025-04-19 11:33:48,360 - ASHA_Chatbot - INFO - Found 0 potential job elements from general structure
+2025-04-19 11:33:48,361 - ASHA_Chatbot - WARNING - No job listings found on page 1, will attempt to extract from main page
+2025-04-19 11:33:48,362 - ASHA_Chatbot - INFO - Extracted 0 unique jobs directly from page content
+2025-04-19 11:33:48,362 - ASHA_Chatbot - INFO - Scraping dynamic page 2: https://www.herkey.com/jobs?page=2
+2025-04-19 11:34:32,394 - ASHA_Chatbot - INFO - Found 0 potential job elements from general structure
+2025-04-19 11:34:32,395 - ASHA_Chatbot - WARNING - No job listings found on page 2, will attempt to extract from main page
+2025-04-19 11:34:32,395 - ASHA_Chatbot - INFO - Extracted 0 unique jobs directly from page content
+2025-04-19 11:34:32,396 - ASHA_Chatbot - INFO - Scraping dynamic page 3: https://www.herkey.com/jobs?page=3
+2025-04-19 11:35:16,508 - ASHA_Chatbot - INFO - Found 0 potential job elements from general structure
+2025-04-19 11:35:16,508 - ASHA_Chatbot - WARNING - No job listings found on page 3, will attempt to extract from main page
+2025-04-19 11:35:16,509 - ASHA_Chatbot - INFO - Extracted 0 unique jobs directly from page content
+2025-04-19 11:35:16,848 - ASHA_Chatbot - INFO - WebDriver closed
+2025-04-19 11:35:16,850 - ASHA_Chatbot - INFO - Stored 0 new jobs to database
+2025-04-19 11:44:02,364 - ASHA_Chatbot - INFO - Database setup complete
+2025-04-19 11:44:09,817 - ASHA_Chatbot - INFO - Scraping API page 1
+2025-04-19 11:44:10,001 - ASHA_Chatbot - WARNING - Failed to get page 1, status code: 401
+2025-04-19 11:44:10,001 - ASHA_Chatbot - INFO - Scraping API page 2
+2025-04-19 11:44:10,169 - ASHA_Chatbot - WARNING - Failed to get page 2, status code: 401
+2025-04-19 11:44:10,169 - ASHA_Chatbot - INFO - Scraping API page 3
+2025-04-19 11:44:10,339 - ASHA_Chatbot - WARNING - Failed to get page 3, status code: 401
+2025-04-19 11:44:10,339 - ASHA_Chatbot - INFO - Stored 0 new jobs to database
+2025-04-19 11:46:34,241 - ASHA_Chatbot - INFO - Database setup complete
+2025-04-19 11:46:38,952 - ASHA_Chatbot - INFO - Successfully retrieved required cookies
+2025-04-19 11:46:38,952 - ASHA_Chatbot - INFO - Scraping API page 1
+2025-04-19 11:46:39,119 - ASHA_Chatbot - WARNING - Received 401, attempting to refresh cookies
+2025-04-19 11:46:39,174 - ASHA_Chatbot - INFO - Successfully retrieved required cookies
+2025-04-19 11:46:39,214 - ASHA_Chatbot - WARNING - Failed to get page 1, status code: 401
+2025-04-19 11:46:39,215 - ASHA_Chatbot - INFO - Scraping API page 2
+2025-04-19 11:46:39,259 - ASHA_Chatbot - WARNING - Received 401, attempting to refresh cookies
+2025-04-19 11:46:39,434 - ASHA_Chatbot - INFO - Successfully retrieved required cookies
+2025-04-19 11:46:39,475 - ASHA_Chatbot - WARNING - Failed to get page 2, status code: 401
+2025-04-19 11:46:39,476 - ASHA_Chatbot - INFO - Scraping API page 3
+2025-04-19 11:46:39,518 - ASHA_Chatbot - WARNING - Received 401, attempting to refresh cookies
+2025-04-19 11:46:39,578 - ASHA_Chatbot - INFO - Successfully retrieved required cookies
+2025-04-19 11:46:39,619 - ASHA_Chatbot - WARNING - Failed to get page 3, status code: 401
+2025-04-19 11:46:39,619 - ASHA_Chatbot - INFO - Stored 0 new jobs to database
+2025-04-19 11:48:14,853 - ASHA_Chatbot - INFO - Database setup complete
+2025-04-19 11:48:20,230 - undetected_chromedriver.patcher - INFO - patching driver executable /Users/sakshi.jaiswal/Library/Application Support/undetected_chromedriver/undetected_chromedriver
+2025-04-19 11:48:22,245 - ASHA_Chatbot - INFO - Undetected ChromeDriver initialized successfully
+2025-04-19 11:48:22,245 - ASHA_Chatbot - INFO - Attempting to scrape with requests first
+2025-04-19 11:48:22,625 - ASHA_Chatbot - INFO - Scraping dynamic page 1: https://www.herkey.com/jobs
+2025-04-19 11:49:06,792 - ASHA_Chatbot - INFO - Found 0 potential job elements from general structure
+2025-04-19 11:49:06,792 - ASHA_Chatbot - WARNING - No job listings found on page 1, will attempt to extract from main page
+2025-04-19 11:49:06,793 - ASHA_Chatbot - INFO - Extracted 0 unique jobs directly from page content
+2025-04-19 11:49:06,793 - ASHA_Chatbot - INFO - Scraping dynamic page 2: https://www.herkey.com/jobs?page=2
+2025-04-19 11:49:50,829 - ASHA_Chatbot - INFO - Found 0 potential job elements from general structure
+2025-04-19 11:49:50,829 - ASHA_Chatbot - WARNING - No job listings found on page 2, will attempt to extract from main page
+2025-04-19 11:49:50,830 - ASHA_Chatbot - INFO - Extracted 0 unique jobs directly from page content
+2025-04-19 11:49:50,830 - ASHA_Chatbot - INFO - Scraping dynamic page 3: https://www.herkey.com/jobs?page=3
+2025-04-19 11:50:35,220 - ASHA_Chatbot - INFO - Found 0 potential job elements from general structure
+2025-04-19 11:50:35,220 - ASHA_Chatbot - WARNING - No job listings found on page 3, will attempt to extract from main page
+2025-04-19 11:50:35,221 - ASHA_Chatbot - INFO - Extracted 0 unique jobs directly from page content
+2025-04-19 11:50:35,531 - ASHA_Chatbot - INFO - WebDriver closed
+2025-04-19 11:50:35,534 - ASHA_Chatbot - INFO - Stored 0 new jobs to database
+2025-04-19 12:08:28,174 - ASHA_Chatbot - INFO - Database setup complete
+2025-04-19 12:08:32,250 - undetected_chromedriver.patcher - INFO - patching driver executable /Users/sakshi.jaiswal/Library/Application Support/undetected_chromedriver/undetected_chromedriver
+2025-04-19 12:08:34,518 - ASHA_Chatbot - INFO - Undetected ChromeDriver initialized successfully
+2025-04-19 12:08:34,518 - ASHA_Chatbot - INFO - Obtaining authentication credentials...
+2025-04-19 12:08:40,096 - ASHA_Chatbot - WARNING - Error extracting auth token: Message: invalid selector: Failed to execute 'send' on 'XMLHttpRequest': Failed to load 'https://api-prod.herkey.com/api/v1/herkey/jobs/es_recommended_jobs?page_no=1&page_size=25'.
+  (Session info: chrome=135.0.7049.85); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalid-selector-exception
+Stacktrace:
+0   undetected_chromedriver             0x00000001052c3448 undetected_chromedriver + 6149192
+1   undetected_chromedriver             0x00000001052bab0a undetected_chromedriver + 6114058
+2   undetected_chromedriver             0x0000000104d4be80 undetected_chromedriver + 417408
+3   undetected_chromedriver             0x0000000104d52b8c undetected_chromedriver + 445324
+4   undetected_chromedriver             0x0000000104d55897 undetected_chromedriver + 456855
+5   undetected_chromedriver             0x0000000104debb33 undetected_chromedriver + 1071923
+6   undetected_chromedriver             0x0000000104dc3792 undetected_chromedriver + 907154
+7   undetected_chromedriver             0x0000000104deaaca undetected_chromedriver + 1067722
+8   undetected_chromedriver             0x0000000104dc3563 undetected_chromedriver + 906595
+9   undetected_chromedriver             0x0000000104d8f955 undetected_chromedriver + 694613
+10  undetected_chromedriver             0x0000000104d905b1 undetected_chromedriver + 697777
+11  undetected_chromedriver             0x0000000105280f00 undetected_chromedriver + 5877504
+12  undetected_chromedriver             0x0000000105284df1 undetected_chromedriver + 5893617
+13  undetected_chromedriver             0x000000010525b344 undetected_chromedriver + 5722948
+14  undetected_chromedriver             0x000000010528580b undetected_chromedriver + 5896203
+15  undetected_chromedriver             0x0000000105249ac4 undetected_chromedriver + 5651140
+16  undetected_chromedriver             0x00000001052a8918 undetected_chromedriver + 6039832
+17  undetected_chromedriver             0x00000001052a8ae0 undetected_chromedriver + 6040288
+18  undetected_chromedriver             0x00000001052ba6d1 undetected_chromedriver + 6112977
+19  libsystem_pthread.dylib             0x00007ff811b1418b _pthread_start + 99
+20  libsystem_pthread.dylib             0x00007ff811b0fae3 thread_start + 15
+
+2025-04-19 12:08:40,098 - ASHA_Chatbot - INFO - Obtained cookies: 0 items
+2025-04-19 12:08:40,098 - ASHA_Chatbot - WARNING - Could not obtain auth token
+2025-04-19 12:08:40,098 - ASHA_Chatbot - INFO - Trying API endpoint: https://api-prod.herkey.com/api/v1/herkey/jobs/es_recommended_jobs
+2025-04-19 12:08:40,098 - ASHA_Chatbot - INFO - Scraping API page 1
+2025-04-19 12:08:40,294 - ASHA_Chatbot - WARNING - Failed to get page 1, status code: 401
+2025-04-19 12:08:40,294 - ASHA_Chatbot - INFO - Trying API endpoint: https://api-prod.herkey.com/api/v1/herkey/jobs/available
+2025-04-19 12:08:40,294 - ASHA_Chatbot - INFO - Scraping API page 1
+2025-04-19 12:08:40,542 - ASHA_Chatbot - WARNING - Failed to get page 1, status code: 404
+2025-04-19 12:08:42,451 - ASHA_Chatbot - INFO - Scraping API page 2
+2025-04-19 12:08:42,659 - ASHA_Chatbot - WARNING - Failed to get page 2, status code: 404
+2025-04-19 12:08:44,115 - ASHA_Chatbot - INFO - Scraping API page 3
+2025-04-19 12:08:44,328 - ASHA_Chatbot - WARNING - Failed to get page 3, status code: 404
+2025-04-19 12:08:45,525 - ASHA_Chatbot - INFO - Trying API endpoint: https://api-prod.herkey.com/api/v1/herkey/jobs/search
+2025-04-19 12:08:45,525 - ASHA_Chatbot - INFO - Scraping API page 1
+2025-04-19 12:08:45,737 - ASHA_Chatbot - WARNING - Failed to get page 1, status code: 404
+2025-04-19 12:08:47,817 - ASHA_Chatbot - INFO - Scraping API page 2
+2025-04-19 12:08:48,038 - ASHA_Chatbot - WARNING - Failed to get page 2, status code: 404
+2025-04-19 12:08:49,723 - ASHA_Chatbot - INFO - Scraping API page 3
+2025-04-19 12:08:49,950 - ASHA_Chatbot - WARNING - Failed to get page 3, status code: 404
+2025-04-19 12:08:52,826 - ASHA_Chatbot - INFO - API approach failed, attempting dynamic page scraping
+2025-04-19 12:08:52,827 - ASHA_Chatbot - INFO - Attempting to extract jobs using JavaScript injection
+2025-04-19 12:08:58,083 - ASHA_Chatbot - WARNING - No jobs found via JavaScript extraction
+2025-04-19 12:08:58,083 - ASHA_Chatbot - INFO - Adding sample job data as fallback
