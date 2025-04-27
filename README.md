@@ -76,26 +76,3 @@ bash
 Copy
 Edit
 streamlit run frontend/app.py
-
-🧱 Architecture
-Service-oriented, modular architecture for scalability and maintainability
-
-Dynamic loading and discovery of services for flexibility
-
-Cached resources to optimize performance and reduce latency
-
-AI-driven, context-aware prompting for each specialized module
-
-Built-in error handling mechanisms for greater system stability
-
-🔮 Future Enhancements
-Improved user authentication system for secure login and session management
-
-Expanded collection of professional resume templates for diverse industries
-
-Broader range of industry-specific interview questions for better preparation
-
-Integration of real-time job market trends and analytics for deeper insights
-
-👥 Contributors
-Sakshi Jaiswal
