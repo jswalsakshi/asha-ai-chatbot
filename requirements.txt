@@ -1,8 +1,10 @@
 streamlit
-openai  # or huggingface_hub
-faiss-cpu
-sentence-transformers
-numpy
-python-dotenv
 streamlit_chat
 fpdf
+google-generativeai
+faiss-cpu
+numpy
+python-dotenv
+sentence-transformers
+langchain
+langchain-google-genai
