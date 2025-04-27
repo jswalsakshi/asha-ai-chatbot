@@ -77,6 +77,8 @@ Copy
 Edit
 streamlit run frontend/app.py
 
+---
+
 ## 🧱 Architecture
 - Modular, service-based architecture design
 - Dynamic service discovery and loading
