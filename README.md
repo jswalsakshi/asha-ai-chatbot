@@ -76,6 +76,7 @@ bash
 Copy
 Edit
 streamlit run frontend/app.py
+
 🧱 Architecture
 Service-oriented, modular architecture for scalability and maintainability
 
