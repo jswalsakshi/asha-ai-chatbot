@@ -53,16 +53,26 @@ Asha is an **AI-powered career companion** built with Streamlit that provides pe
 
 1. **Clone the repository**
 
+```bash
 git clone https://github.com/jswalsakshi/asha-ai-chatbot.git
 cd asha-ai-chatbot
-
 Install dependencies
-pip install -r requirements.txt
 
+bash
+Copy
+Edit
+pip install -r requirements.txt
 Set environment variables in .env
+
+ini
+Copy
+Edit
 GEMINI_API_KEY=your_key
 HUGGINGFACE_API_URL=your_url
 HUGGINGFACE_API_TOKEN=your_token
-
 Run the app
+
+bash
+Copy
+Edit
 streamlit run frontend/app.py
