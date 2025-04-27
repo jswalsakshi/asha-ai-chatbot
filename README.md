@@ -76,25 +76,20 @@ bash
 Copy
 Edit
 streamlit run frontend/app.py
-🧱 Architecture
-The app follows a modular, service-based architecture featuring:
 
-Dynamic service discovery and loading
+## 🧱 Architecture
+- Modular, service-based architecture design
+- Dynamic service discovery and loading
+- Cached resources for optimized performance
+- Context-specific AI prompting for specialized modules
+- Robust error fallbacks for improved stability
 
-Cached resources for performance
+## 🔮 Future Enhancements
+- Enhanced user authentication system
+- Additional professional resume templates
+- Expanded industry-specific interview question banks
+- Real-time job market analytics and insights
 
-Context-specific AI prompting per module
+## 👥 Contributors
+- Sakshi Jaiswal
 
-Error fallbacks for robustness
-
-🔮 Future Enhancements
-Enhanced authentication system
-
-Additional resume templates
-
-Industry-specific interview question banks
-
-Real-time job market analytics
-
-👥 Contributors
-Sakshi Jaiswal
