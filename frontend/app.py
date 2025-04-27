@@ -34,7 +34,7 @@ if os.path.exists(jobs_reco_path):
     format_job_listings = jobs_reco.format_job_listings
     load_jobs_from_csv = jobs_reco.load_jobs_from_csv
     search_jobs = jobs_reco.search_jobs
-    st.sidebar.success("✅ Jobs recommendation service loaded!")
+    # st.sidebar.success("✅ Jobs recommendation service loaded!")
 else:
     st.sidebar.error(f"⚠️ Could not find jobs_reco.py at {jobs_reco_path}")
     # Define fallback functions
@@ -162,8 +162,8 @@ try:
     rag_test = get_rag_service()
     if not rag_test["available"]:
         st.sidebar.error(f"⚠️ RAG service not available: {rag_test['error']}")
-    else:
-        st.sidebar.success("✅ RAG service connected successfully!")
+    # else:
+        # st.sidebar.success("✅ RAG service connected successfully!")
 except Exception as e:
     st.sidebar.error(f"⚠️ Error testing RAG service: {str(e)}")
 
@@ -210,8 +210,8 @@ try:
     llm_test = get_llm_service()
     if not llm_test["available"]:
         st.sidebar.error(f"⚠️ LLM service not available: {llm_test['error']}")
-    else:
-        st.sidebar.success("✅ LLM service connected successfully!")
+    # else:
+    #     st.sidebar.success("✅ LLM service connected successfully!")
 except Exception as e:
     st.sidebar.error(f"⚠️ Error testing LLM service: {str(e)}")
 
@@ -219,7 +219,7 @@ except Exception as e:
 def get_job_database():
     """Get job database with caching"""
     jobs = load_jobs_from_csv()
-    st.sidebar.success(f"✅ Loaded {sum(len(jobs[cat]) for cat in jobs)} jobs")
+    # st.sidebar.success(f"✅ Loaded {sum(len(jobs[cat]) for cat in jobs)} jobs")
     return jobs
 
 # Get the job database once
@@ -591,14 +591,14 @@ elif user_id:  # Only show the chat interface if logged in
         save_user_chat(user_id, st.session_state.messages)
         st.rerun()
     
-    if st.sidebar.button("Export Chat as JSON"):
-        chat_json = json.dumps(st.session_state.messages, indent=2)
-        st.sidebar.download_button(
-            label="Download JSON",
-            data=chat_json,
-            file_name=f"asha_chat_{user_id[:8]}_{datetime.now().strftime('%Y%m%d')}.json",
-            mime="application/json"
-        )
+    # if st.sidebar.button("Export Chat as JSON"):
+    #     chat_json = json.dumps(st.session_state.messages, indent=2)
+    #     st.sidebar.download_button(
+    #         label="Download JSON",
+    #         data=chat_json,
+    #         file_name=f"asha_chat_{user_id[:8]}_{datetime.now().strftime('%Y%m%d')}.json",
+    #         mime="application/json"
+    #     )
 
     if st.sidebar.button("Refresh Job Database"):
         # Clear the cache to force reload
