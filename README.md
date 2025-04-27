@@ -76,7 +76,7 @@ bash
 Copy
 Edit
 streamlit run frontend/app.py
-
+bash```
 ---
 
 ## 🧱 Architecture
