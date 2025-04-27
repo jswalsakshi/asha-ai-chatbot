@@ -680,15 +680,133 @@ elif user_id:  # Only show the chat interface if logged in
                     # Handle different contexts
                     if st.session_state.context == "jobs":
                         try:
-                            # First, check if it's a follow-up question about specific jobs
                             if context and context.get("type") == "job_listings":
+                                # Debug info
+                                st.sidebar.write("Job context detected, checking for specific job mention...")
+                                
                                 # The user is asking about job listings already shown
                                 llm = get_llm_service()
-                                if llm["available"]:
-                                    # Use LLM to provide detailed advice about the jobs
-                                    response = llm["generate_career_advice"](user_input, context)
+                                
+                                # Get jobs from context
+                                job_listings = context.get("jobs", [])
+                                selected_job = None
+                                
+                                # Print available jobs for debugging
+                                st.sidebar.write(f"Available jobs ({len(job_listings)}):")
+                                for idx, job in enumerate(job_listings):
+                                    job_title = job.get("title", "")
+                                    job_company = job.get("company", "")
+                                    st.sidebar.write(f"{idx+1}. {job_title} at {job_company}")
+                                
+                                # More flexible job matching - check multiple variations
+                                user_input_lower = user_input.lower()
+                                for job in job_listings:
+                                    job_title = job.get("title", "").lower()
+                                    job_company = job.get("company", "").lower()
+                                    
+                                    # Check various matching patterns
+                                    if (job_title in user_input_lower and job_company in user_input_lower) or \
+                                    (f"{job_title} at {job_company}" in user_input_lower) or \
+                                    (job_title in user_input_lower and any(company_part in user_input_lower for company_part in job_company.split())) or \
+                                    (any(word in user_input_lower for word in job_title.split()) and job_company in user_input_lower):
+                                        selected_job = job
+                                        st.sidebar.success(f"✓ Selected job: {job.get('title')} at {job.get('company')}")
+                                        break
+                                
+                                if selected_job:
+                                    # Job identified - provide specific response
+                                    if llm["available"]:
+                                        # Create enhanced context with job details
+                                        job_context = {
+                                            "type": "specific_job",
+                                            "job": selected_job,
+                                            "request": user_input
+                                        }
+                                        
+                                        # Generate specific job response
+                                        try:
+                                            job_title = selected_job.get('title', '')
+                                            job_company = selected_job.get('company', '')
+                                            job_location = selected_job.get('location', '')
+                                            job_type = selected_job.get('type', '')
+                                            job_skills = ', '.join(selected_job.get('skills', []))
+                                            
+                                            # Build detailed prompt with job info
+                                            job_prompt = f"""
+                                            The user is asking about this specific job: {job_title} at {job_company}.
+                                            
+                                            JOB DETAILS:
+                                            - Title: {job_title}
+                                            - Company: {job_company}
+                                            - Location: {job_location}
+                                            - Type: {job_type}
+                                            - Required Skills: {job_skills}
+                                            
+                                            Original user query: {user_input}
+                                            
+                                            Please provide detailed information about this role, including:
+                                            1. A summary of the position and its responsibilities
+                                            2. Important requirements and qualifications
+                                            3. Tips for applying successfully
+                                            4. Potential interview questions for this role
+                                            """
+                                            
+                                            response = llm["generate_career_advice"](job_prompt, job_context)
+                                            st.sidebar.success("✓ Generated specific job response")
+                                        except Exception as e:
+                                            st.sidebar.error(f"Error generating job response: {str(e)}")
+                                            # Fallback for specific job
+                                            response = f"""
+                                            ## {job_title} at {job_company}
+                                            
+                                            This position is located in {job_location} and is a {job_type} role.
+                                            
+                                            ### Required Skills:
+                                            {job_skills}
+                                            
+                                            This looks like a great match for your experience! The Backend Developer role typically involves designing server architecture, implementing APIs, and ensuring scalability.
+                                            
+                                            Would you like tips for preparing your application for this position?
+                                            """
+                                    else:
+                                        # Fallback for specific job if LLM not available
+                                        job_title = selected_job.get('title', '')
+                                        job_company = selected_job.get('company', '')
+                                        job_location = selected_job.get('location', '')
+                                        job_skills = ', '.join(selected_job.get('skills', []))
+                                        
+                                        response = f"""
+                                        ## {job_title} at {job_company}
+                                        
+                                        This position is located in {job_location}.
+                                        
+                                        ### Required Skills:
+                                        {job_skills}
+                                        
+                                        This looks like a great match for your experience! Would you like tips for preparing your application?
+                                        """
                                 else:
-                                    response = "Those are great jobs to consider! Would you like tips on preparing your application?"
+                                    # No specific job identified
+                                    st.sidebar.warning("No specific job identified in user query")
+                                    if "application" in user_input_lower or "apply" in user_input_lower or "resume" in user_input_lower:
+                                        response = """
+                                        # Application Tips
+                                        
+                                        Here are some general tips for job applications:
+                                        
+                                        1. **Customize your resume** for each application
+                                        2. **Research the company** thoroughly before applying
+                                        3. **Highlight relevant skills** and experience in your cover letter
+                                        4. **Follow up** a week after submitting your application
+                                        
+                                        Would you like specific tips for a particular job?
+                                        """
+                                    else:
+                                        # General job advice
+                                        if llm["available"]:
+                                            response = llm["generate_career_advice"](user_input, context)
+                                        else:
+                                            response = "Those are great jobs to consider! Would you like tips on preparing your application?"
                             else:
                                 # Check if the user is looking for different types of jobs
                                 job_search_keywords = ["looking for", "interested in", "searching for", "find", 

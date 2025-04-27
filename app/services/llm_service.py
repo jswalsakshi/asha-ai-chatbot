@@ -20,18 +20,29 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Direct Gemini API setup as a fallback option
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Career-focused system prompt
+# Enhanced career-focused system prompt with structured response guidance
 SYSTEM_PROMPT = """
 You are Asha, a helpful career assistant. Your goal is to provide clear, practical advice on career development, 
-job searching, resume building, interviewing, and professional growth. Remember:
+job searching, resume building, interviewing, and professional growth.
+
+RESPONSE FORMATTING REQUIREMENTS:
+- Format ALL responses in a highly structured, organized manner
+- Use Markdown formatting consistently (headings, lists, tables)
+- Create tables with clear headers for presenting comparative information
+- Use bullet points or numbered lists for steps, advantages, or key points
+- Break information into clear sections with ### or ## headings
+- Keep responses concise, focused, and easy to scan
+- Bold important terms or concepts using **bold** formatting
+- Use summaries or TL;DR sections for longer responses
+
+CONTENT GUIDELINES:
 - Be supportive, positive, and empowering
 - Provide specific, actionable advice
-- Focus ONLY on helping people advance their careers, job searching, and professional development
+- Focus ONLY on helping people advance their careers and professional development
 - Be inclusive and consider diverse backgrounds and career paths
 - Cite statistics or best practices when relevant
-- If asked about non-career topics, politely redirect the conversation back to career advice
-- NEVER provide advice on topics unrelated to careers, jobs, professional development, or workplace dynamics
-- When discussing specific job listings, provide detailed information and personalized application advice
+- If asked about non-career topics, politely redirect the conversation
+- NEVER provide advice on topics unrelated to careers, jobs, or professional development
 """
 
 # Initialize conversation memory
@@ -84,7 +95,7 @@ def get_conversation_chain():
             max_output_tokens=800,
         )
         
-        # Create a prompt template with system message and conversation history
+        # Create a prompt template with enhanced system message for structured responses
         prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content=SYSTEM_PROMPT),
             MessagesPlaceholder(variable_name="history"),
@@ -106,18 +117,27 @@ def get_conversation_chain():
 
 def direct_generate_response(query: str, context: Optional[Dict[str, Any]] = None) -> str:
     """
-    Generate response directly using the Google Generative AI library as a fallback
+    Generate structured response directly using the Google Generative AI library as a fallback
     
     Args:
         query: User's question
         context: Optional context information about previous interactions
     
     Returns:
-        str: Generated response
+        str: Generated structured response
     """
     try:
         if not verify_api_key():
-            return "I'm experiencing connectivity issues. Please check your API key configuration."
+            return """
+### Connection Issue
+
+I'm experiencing connectivity issues. Please check your API key configuration.
+
+**Troubleshooting Steps:**
+1. Verify your API key is valid
+2. Check your internet connection
+3. Try again in a few moments
+            """
         
         # Create conversation context with system prompt and past messages
         conversation = [SYSTEM_PROMPT]
@@ -129,12 +149,21 @@ def direct_generate_response(query: str, context: Optional[Dict[str, Any]] = Non
             elif isinstance(msg, AIMessage):
                 conversation.append(f"Assistant: {msg.content}")
         
-        # Add context information if available
+        # Add structured context prompt if available
         if context:
-            if context.get("type") == "job_listings" and context.get("jobs"):
-                jobs = context.get("jobs")
-                job_info = "\n".join([f"Job: {job.get('title')} at {job.get('company')}" for job in jobs[:3] if job.get('title')])
-                conversation.append(f"Context: We were discussing these job listings: {job_info}")
+            context_prompt = format_structured_context(context)
+            conversation.append(f"Context: {context_prompt}")
+        
+        # Add explicit instruction for structured response
+        structured_instruction = """
+Remember to format your response with clear structure using:
+- Markdown headings (### for sections)
+- Tables for comparing information
+- Bullet points or numbered lists for steps
+- Bold text for important points
+- Keep it concise and scannable
+        """
+        conversation.append(structured_instruction)
         
         # Add the current question
         conversation.append(f"User: {query}")
@@ -151,22 +180,69 @@ def direct_generate_response(query: str, context: Optional[Dict[str, Any]] = Non
             
             return response.text
         
-        return "I couldn't generate a response at this time."
+        return """
+### Response Generation Issue
+
+I couldn't generate a response at this time.
+
+**Please try:**
+- Rephrasing your question
+- Breaking complex questions into simpler ones
+- Trying again in a moment
+        """
         
     except Exception as e:
         print(f"Error in direct_generate_response: {str(e)}")
-        return f"I encountered an issue with the response generation. Please try again with a different question."
+        return f"""
+### Technical Difficulty
+
+I encountered an issue with the response generation.
+
+**Error:** {str(e)[:50]}...
+
+Please try again with a different question or approach.
+        """
+
+def format_structured_context(context: Dict[str, Any]) -> str:
+    """
+    Format context information in a structured way for better LLM prompting
+    
+    Args:
+        context: Context dictionary with information
+        
+    Returns:
+        str: Formatted context string
+    """
+    if context.get("type") == "job_listings" and context.get("jobs"):
+        jobs = context.get("jobs", [])
+        job_table = "Previous jobs we discussed:\n\n"
+        job_table += "| Title | Company | Location | Type | Skills |\n"
+        job_table += "| ----- | ------- | -------- | ---- | ------ |\n"
+        
+        for job in jobs[:3]:  # Limit to first 3 jobs
+            title = job.get('title', 'Unknown')
+            company = job.get('company', 'Unknown')
+            location = job.get('location', 'Unknown')
+            job_type = job.get('type', 'Unknown')
+            skills = ', '.join(job.get('skills', ['Unknown'])[:3])
+            
+            job_table += f"| {title} | {company} | {location} | {job_type} | {skills} |\n"
+            
+        return job_table
+    
+    # Generic context formatting for other context types
+    return json.dumps(context, indent=2)
 
 def generate_career_advice(query: str, context: Optional[Dict[str, Any]] = None) -> str:
     """
-    Generate career advice using LangChain with fallback options
+    Generate structured career advice using LangChain with fallback options
     
     Args:
         query (str): User's question
         context (dict, optional): Additional context about previous interactions
     
     Returns:
-        str: Generated response or redirection message if off-topic
+        str: Generated structured response or redirection message if off-topic
     """
     try:
         print(f"Processing query: {query}")
@@ -183,15 +259,26 @@ def generate_career_advice(query: str, context: Optional[Dict[str, Any]] = None)
             ]
             
             if any(keyword in query.lower() for keyword in job_interest_keywords):
-                print("User expressing job interest, generating job details response")
-                return generate_job_details_response(query, context.get("jobs", []))
+                print("User expressing job interest, generating structured job details response")
+                return generate_structured_job_response(query, context.get("jobs", []))
         
         # For other queries, check if it's a career question
         if not is_career_question(query, context):
             print("Not a career question")
-            return ("I'm designed to assist with career-related questions, job searching, resume building, "
-                    "interviews, mentorship, and professional development. Could you please ask me something "
-                    "related to these areas so I can help you with your professional journey?")
+            return """
+### Career Focus Reminder
+
+I'm designed to assist with career-related questions including:
+
+- **Job searching** and applications
+- **Resume building** and optimization
+- **Interview preparation** and techniques
+- **Professional development** strategies
+- **Workplace dynamics** and advancement
+- **Mentorship** and networking
+
+Could you please ask something related to these areas so I can help with your professional journey?
+            """
         
         print("Career question detected, continuing...")
         
@@ -200,11 +287,15 @@ def generate_career_advice(query: str, context: Optional[Dict[str, Any]] = None)
             print(f"Injecting context: {context.get('type', 'unknown')}")
             inject_context_into_memory(context)
         
-        # Handle follow-up questions specially - this is now redundant with the check above
-        # but keeping for safety in case the first check is missed
-        if is_followup_question(query) and context and context.get("type") == "job_listings":
-            print("Handling job listing follow-up")
-            return generate_job_details_response(query, context.get("jobs", []))
+        # Enhanced structure prompt
+        structure_instruction = """
+Format your response in a highly structured manner:
+- Use markdown headings (###) for clear sections
+- Use bullet points or numbered lists for steps/points
+- Create tables for comparative information
+- Bold important concepts
+- Keep your response concise and easy to scan
+        """
         
         print("Getting conversation chain...")
         # Try LangChain implementation first
@@ -215,9 +306,10 @@ def generate_career_advice(query: str, context: Optional[Dict[str, Any]] = None)
                 # Add user query to memory
                 memory.chat_memory.add_user_message(query)
                 
-                # Generate response using the chain
+                # Generate response using the chain with structure instruction
                 print("Generating response with LangChain...")
-                response = chain.predict(input=query)
+                enhanced_query = f"{query}\n\n{structure_instruction}"
+                response = chain.predict(input=enhanced_query)
                 
                 # Record AI response in memory
                 memory.chat_memory.add_ai_message(response)
@@ -239,7 +331,20 @@ def generate_career_advice(query: str, context: Optional[Dict[str, Any]] = None)
         try:
             return direct_generate_response(query, context)
         except:
-            return "I'm experiencing technical difficulties. Let me offer some general career advice: networking, continuous learning, and building a strong personal brand are key to career success."
+            return """
+### Technical Difficulty
+
+I'm experiencing technical difficulties. Here's some general career advice:
+
+**Key Career Success Factors:**
+- **Networking:** Build meaningful professional relationships
+- **Continuous learning:** Stay updated with industry trends
+- **Personal branding:** Develop your unique professional identity
+- **Career planning:** Set clear goals with actionable steps
+- **Work-life balance:** Maintain sustainable productivity
+
+Need specific advice? Please try asking again with a focused question.
+            """
 
 def inject_context_into_memory(context: Dict[str, Any]) -> None:
     """
@@ -250,18 +355,34 @@ def inject_context_into_memory(context: Dict[str, Any]) -> None:
     """
     try:
         if context.get("type") == "job_listings" and context.get("jobs"):
-            job_titles = [f"{job.get('title', 'a job')} at {job.get('company', 'a company')}" for job in context.get("jobs", [])]
-            job_context_msg = f"We were discussing these jobs: {', '.join(job_titles[:3])}"
+            # Format job info in structured format
+            jobs = context.get("jobs", [])
+            job_titles = [f"{job.get('title', 'a job')} at {job.get('company', 'a company')}" for job in jobs]
+            
+            job_context_msg = f"""
+### Jobs Currently Discussing
+
+We're currently discussing these opportunities:
+- {job_titles[0] if len(job_titles) > 0 else 'N/A'}
+- {job_titles[1] if len(job_titles) > 1 else 'N/A'}
+- {job_titles[2] if len(job_titles) > 2 else 'N/A'}
+            """
             
             # Add as AI message to memory
             memory.chat_memory.add_ai_message(job_context_msg)
-            print(f"Added context to memory: {job_context_msg}")
+            print(f"Added structured context to memory")
             
             # Also add user preferences if available
             if "user_preferences" in context:
-                pref_msg = f"You mentioned interest in: {context.get('user_preferences')}"
+                pref_msg = f"""
+### Your Job Preferences
+                
+You've mentioned interest in: **{context.get('user_preferences')}**
+                
+Let me tailor my recommendations to these preferences.
+                """
                 memory.chat_memory.add_ai_message(pref_msg)
-                print(f"Added preferences to memory: {pref_msg}")
+                print(f"Added structured preferences to memory")
     except Exception as e:
         print(f"Error injecting context: {str(e)}")
 
@@ -285,99 +406,265 @@ def is_followup_question(query: str) -> bool:
     ]
     
     # Check for short questions that might be follow-ups
-    is_short = len(query.split()) <= 8  # Increased from 6 to catch more follow-ups
+    is_short = len(query.split()) <= 8
     has_followup_phrase = any(phrase in query_lower for phrase in followup_phrases)
     
     # More permissive criteria - either short or contains follow-up phrase
     return is_short or has_followup_phrase
 
-# Modify the generate_job_details_response function around line 222
-
-def generate_job_details_response(query: str, jobs: List[Dict[str, Any]]) -> str:
+def generate_structured_job_response(query: str, jobs: List[Dict[str, Any]]) -> str:
     """
-    Generate a detailed response about jobs based on the query
+    Generate a detailed, structured response about jobs with tables and formatted sections
     
     Args:
         query (str): User's follow-up question
         jobs (list): List of job details
     
     Returns:
-        str: Formatted response with job details
+        str: Formatted response with job details in an organized, tabular format
     """
-    print(f"Generating job details for: {query}")
+    print(f"Generating structured job details for: {query}")
     print(f"Jobs available: {len(jobs)}")
-    print(f"Current jobs in context: {[job.get('title', 'Unknown') for job in jobs]}")
     
     if not jobs:
-        return "I don't have any job details to share at the moment. Would you like me to help you find job opportunities?"
+        return """
+### Job Search Assistance
+
+I don't have any job details to share at the moment.
+
+**Would you like me to help you:**
+- Search for specific job opportunities?
+- Discuss job search strategies?
+- Review your resume for job applications?
+- Practice interview questions?
+
+Let me know what interests you most!
+        """
     
     # Try to identify which specific job the user is asking about
     query_lower = query.lower()
     selected_job = None
-    selected_idx = 0
     
-    # First check: Look for job title or company mentions in the query
-    for idx, job in enumerate(jobs):
+    # Enhanced matching algorithm for job selection
+    for job in jobs:
         title = job.get('title', '').lower()
         company = job.get('company', '').lower()
         
-        # Check if job title or company is mentioned in the query
-        if (title and title in query_lower) or (company and company in query_lower):
+        # Multiple pattern matching approaches for flexibility
+        if (title in query_lower and company in query_lower) or \
+           (f"{title} at {company}" in query_lower) or \
+           (title in query_lower and any(company_part in query_lower for company_part in company.split())) or \
+           (any(word in query_lower for word in title.split()) and company in query_lower):
             selected_job = job
-            selected_idx = idx
-            print(f"Found specific job match by name: {title} at {company}")
+            print(f"Found specific job match: {title} at {company}")
             break
     
-    # Second check: If user responded with "yes", "sure", etc., use the first job
-    # This is the case that was failing before
+    # Handle affirmative responses
     if not selected_job and (
         query_lower in ["yes", "sure", "okay", "ok", "please", "definitely", "absolutely"] or
         any(affirmation in query_lower for affirmation in ["yes", "want", "like to", "interested", "tell me more"])
     ):
-        # For simple affirmative responses, keep the job that was asked about most recently
-        # We'll assume it's the first one in the list as that's what we showed
         selected_job = jobs[0]
-        selected_idx = 0
         print(f"User affirmed interest - using first job: {selected_job.get('title', 'Unknown job')}")
     
-    # Fallback: If still no job selected, use the first one
-    if not selected_job:
+    # Default to first job if no match found
+    if not selected_job and jobs:
         selected_job = jobs[0]
         print(f"No specific match, using first job by default: {selected_job.get('title', 'Unknown job')}")
     
-    # The rest of the existing function...
+    # Extract all job details
     job_title = selected_job.get('title', 'Job Position')
+    job_company = selected_job.get('company', 'Company')
+    job_location = selected_job.get('location', 'Location not specified')
+    job_type = selected_job.get('type', 'Type not specified')
     
-    # For simple "yes" responses to application tips question, provide application tips
-    if query_lower in ["yes", "sure", "okay", "ok", "please", "definitely", "absolutely", "would like", "i want"]:
-        response = f"### Application Tips for {job_title} at {selected_job.get('company', 'the company')}\n\n"
-        response += "1. **Research the company:** Understand Microsoft's products, culture, and recent news to show your genuine interest.\n\n"
-        response += "2. **Tailor your resume:** Highlight your experience with "
-        
-        # Add skill-specific advice if skills are available
-        if selected_job.get('skills'):
-            skills = selected_job.get('skills')
-            if isinstance(skills, list) and skills:
-                response += f"{', '.join(skills[:3])}. "
-            elif isinstance(skills, str):
-                response += f"{skills}. "
-        else:
-            response += "relevant technologies and frameworks. "
-        
-        response += "\n\n3. **Prepare technical examples:** Be ready to discuss specific projects where you've used similar technologies.\n\n"
-        response += "4. **Practice coding questions:** For technical roles, review data structures, algorithms, and be prepared for coding exercises.\n\n"
-        response += "5. **Prepare questions:** Have thoughtful questions about the team, projects, and growth opportunities.\n\n"
-        
-        response += f"Would you like more specific advice for preparing for interviews at {selected_job.get('company', 'the company')}?"
-        return response
-        
-    # Build a comprehensive response for non-application questions
-    response = f"### {job_title}\n\n"
+    # Format skills properly
+    job_skills_raw = selected_job.get('skills', [])
+    if isinstance(job_skills_raw, list):
+        job_skills = ", ".join(job_skills_raw)
+    else:
+        job_skills = str(job_skills_raw)
     
-    # Rest of your existing response building code...
-    # (Keep all the existing code for building the job details response)
-    
-    return response
+    # Check for different question types to provide structured responses
+    # Application tips request
+    if any(keyword in query_lower for keyword in ["apply", "application", "resume", "tips", "advice", "how to"]):
+        return f"""
+### Application Guide: {job_title} at {job_company}
+
+| **Detail** | **Information** |
+|------------|-----------------|
+| **Position** | {job_title} |
+| **Company** | {job_company} |
+| **Location** | {job_location} |
+| **Job Type** | {job_type} |
+
+#### Required Skills
+- {job_skills.replace(', ', '\n- ')}
+
+#### Application Strategy
+
+| **Step** | **Action Items** |
+|----------|------------------|
+| **1. Research** | • Study {job_company}'s products/services<br>• Understand their mission and values<br>• Research recent company news |
+| **2. Resume** | • Highlight experience with key skills<br>• Quantify achievements with metrics<br>• Use job description keywords |
+| **3. Cover Letter** | • Address specific job requirements<br>• Show enthusiasm for {job_company}<br>• Connect your experience to their needs |
+| **4. Interview** | • Prepare {job_title}-specific examples<br>• Research typical technical questions<br>• Prepare thoughtful questions about the role |
+| **5. Follow-up** | • Send thank-you email within 24 hours<br>• Reference specific conversation points<br>• Restate your interest and qualifications |
+
+**Would you like specific interview questions to prepare for this role?**
+"""
+
+    # Salary/compensation question
+    elif any(keyword in query_lower for keyword in ["salary", "pay", "compensation", "money", "benefit"]):
+        return f"""
+### Compensation Information: {job_title} at {job_company}
+
+| **Detail** | **Information** |
+|------------|-----------------|
+| **Position** | {job_title} |
+| **Company** | {job_company} |
+| **Location** | {job_location} |
+
+#### Typical Compensation Range
+
+Based on industry standards for {job_title} roles at companies like {job_company} in {job_location}:
+
+| **Component** | **Typical Range** |
+|---------------|-------------------|
+| **Base Salary** | Typically $85,000-$120,000 for this role |
+| **Bonuses** | Performance bonuses of 5-15% annual salary |
+| **Stock Options** | Often included at tech companies like {job_company} |
+| **Benefits** | Health insurance, retirement plans, and paid time off |
+
+**Note:** Actual compensation may vary based on experience level, specific skills (particularly {job_skills.split(',')[0]}), and negotiation.
+
+#### Negotiation Tips
+1. **Research thoroughly** - Use Glassdoor, LinkedIn Salary, and PayScale
+2. **Highlight your expertise** in {job_skills.split(',')[0]} and {job_skills.split(',')[1] if ',' in job_skills else 'related technologies'}
+3. **Consider the total package** - not just base salary
+
+Would you like specific negotiation strategies for {job_company}?
+"""
+
+    # Skills/requirements question
+    elif any(keyword in query_lower for keyword in ["skill", "requirement", "qualification", "need", "expect"]):
+        return f"""
+### Skills & Requirements: {job_title} at {job_company}
+
+| **Core Detail** | **Information** |
+|-----------------|-----------------|
+| **Position** | {job_title} |
+| **Company** | {job_company} |
+| **Type** | {job_type} |
+
+#### Technical Skills Required
+
+#### Skill Breakdown
+
+| **Skill Category** | **Importance** | **Details** |
+|-------------------|----------------|------------|
+| **Technical Skills** | ★★★★★ | Proficiency in {', '.join(job_skills_raw[:3] if isinstance(job_skills_raw, list) and len(job_skills_raw) >= 3 else ['relevant technologies'])} |
+| **Problem Solving** | ★★★★☆ | Ability to troubleshoot complex systems |
+| **Communication** | ★★★★☆ | Clear documentation and team collaboration |
+| **Project Management** | ★★★☆☆ | Handling deadlines and resource planning |
+
+#### Qualification Levels
+
+- **Required:** Bachelor's degree in Computer Science or related field
+- **Preferred:** 3+ years experience with {job_skills.split(',')[0] if ',' in job_skills else 'relevant technologies'}
+- **Bonus:** Experience with {job_company}-specific tools or methodologies
+
+**Do you have specific questions about any of these requirements?**
+"""
+
+    # Company/culture question
+    elif any(keyword in query_lower for keyword in ["company", "culture", "work", "environment", "team", "about"]):
+        return f"""
+### Company Profile: {job_company}
+
+| **Company Detail** | **Information** |
+|-------------------|-----------------|
+| **Industry** | Technology/Software |
+| **Size** | Medium to Large Enterprise |
+| **Culture** | Innovation-focused, collaborative |
+
+#### Work Environment
+
+| **Aspect** | **Description** |
+|------------|-----------------|
+| **Work Style** | {job_type} with flexible scheduling |
+| **Team Structure** | Cross-functional teams with agile methodology |
+| **Career Growth** | Internal promotion pathways and learning opportunities |
+| **Work-Life Balance** | Competitive PTO and wellness programs |
+
+#### Company Values
+- **Innovation:** Pushing boundaries in technology
+- **Collaboration:** Team-based problem solving
+- **Excellence:** High standards for quality
+- **Diversity:** Inclusive workplace policies
+
+#### Position Details
+This {job_title} role focuses on delivering high-quality solutions while working with a diverse team of professionals. The role offers exposure to cutting-edge technologies and challenging projects.
+
+**Would you like to know more about the team structure or advancement opportunities?**
+"""
+
+    # Interview preparation question
+    elif any(keyword in query_lower for keyword in ["interview", "question", "prepare", "ask"]):
+        return f"""
+### Interview Preparation: {job_title} at {job_company}
+
+| **Position** | **Location** | **Type** |
+|--------------|--------------|----------|
+| {job_title} | {job_location} | {job_type} |
+
+#### Common Interview Questions
+
+| **Question Type** | **Example Questions** |
+|-------------------|----------------------|
+| **Technical** | • How would you implement [relevant feature] using {job_skills.split(',')[0]}?<br>• Explain your approach to debugging in {job_skills.split(',')[1] if ',' in job_skills else 'your preferred language'}<br>• How would you optimize a slow-performing application? |
+| **Behavioral** | • Describe a challenging project and how you overcame obstacles<br>• How do you handle tight deadlines and changing requirements?<br>• Tell me about a time you resolved a conflict in a team |
+| **Problem-Solving** | • How would you design a system for [relevant task]?<br>• Walk through your thought process on [domain-specific problem]<br>• What metrics would you use to measure success? |
+
+#### Interview Tips
+
+1. **Prepare examples** that highlight your experience with {job_skills.split(',')[0]}
+2. **Research {job_company}** - understand their products, culture, recent news
+3. **Practice explaining** complex technical concepts clearly
+4. **Prepare questions** about the team, projects, and growth opportunities
+
+**Would you like mock interview questions specific to this role?**
+"""
+
+    # Default comprehensive job overview
+    else:
+        return f"""
+### {job_title} at {job_company}
+
+| **Job Detail** | **Information** |
+|---------------|-----------------|
+| **Company** | {job_company} |
+| **Location** | {job_location} |
+| **Job Type** | {job_type} |
+
+#### Skills Required
+
+#### Role Overview
+This {job_title} position focuses on designing, implementing, and maintaining systems that align with {job_company}'s business objectives. The role requires strong expertise in {job_skills.split(',')[0]} and collaboration with cross-functional teams.
+
+#### Key Responsibilities
+
+| **Area** | **Tasks** |
+|----------|-----------|
+| **Development** | • Build robust, scalable solutions<br>• Optimize performance<br>• Implement security best practices |
+| **Collaboration** | • Work with product and design teams<br>• Participate in code reviews<br>• Mentor junior team members |
+| **Innovation** | • Research new technologies<br>• Propose improvements<br>• Contribute to architectural decisions |
+
+#### Career Path
+This role provides growth opportunities toward Senior {job_title}, Team Lead, and eventually Technical Management or Architecture roles.
+
+**What specific aspect of this position would you like to explore further?**
+"""
 
 def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> bool:
     """
@@ -390,36 +677,37 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
     Returns:
         bool: True if career-related, False otherwise
     """
-    # IMPORTANT: Always consider job follow-ups as career questions
+    # Always consider job context as career related
     if context and context.get("type") == "job_listings":
-        # If we have job context, most responses are likely job-related
         return True
     
     # Check for job interest phrases that might not be caught by keywords
     job_interest_phrases = [
-        "interested in", "tell me more about", "more about the", "like to know more", 
+        "interested in", "tell me more about", "more about the", "like to know more",
         "want to apply", "how to apply", "yes", "please", "sure", "sounds good",
         "like the", "would like", "about this job", "about that job", "about the position",
         "want to learn", "job description", "requirements", "qualifications", "salary",
         "sounds interesting", "company", "location", "remote", "hybrid", "onsite",
-        "prepare for", "apply for", "perfect", "good fit", "skills needed"
+        "prepare for", "apply for", "perfect", "good fit", "skills needed" 
+        "want to apply", "how to apply", "yes", "please", "sure", "sounds good"
     ]
     
     query_lower = query.lower()
     if any(phrase in query_lower for phrase in job_interest_phrases):
         return True
     
-    # Always allow follow-up questions in an ongoing conversation
+    # Allow follow-up questions in an ongoing conversation
     if is_followup_question(query) and memory.chat_memory.messages:
         return True
     
-    # Define relevant topics and their keywords (more comprehensive)
+    # Define relevant topics and their keywords (comprehensive list)
     relevant_topics = {
         "career_development": [
             "career", "profession", "professional", "growth", "advance", "progress", "path", 
             "trajectory", "promotion", "transition", "pivot", "change", "switch", "move", 
             "advancement", "aspiration", "goal", "objective", "ambition", "direction", "success",
             "industry", "field", "sector", "domain", "area", "discipline", "specialty"
+            "trajectory", "promotion", "transition", "pivot", "change", "switch"
         ],
         "job_search": [
             "job", "work", "employ", "position", "role", "opening", "vacancy", "hiring", 
@@ -432,13 +720,15 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
             "salary", "compensation", "pay", "wage", "income", "earning", "remuneration", "stipend", 
             "benefit", "bonus", "raise", "increment", "hike", "stock", "equity", "option", "esop",
             "negotiate", "bargain", "discussion", "package", "offer", "counter-offer", "money"
+            "application", "apply", "workplace", "company", "organization", "remote", "hybrid"
         ],
         "resume_portfolio": [
-            "resume", "cv", "curriculum vitae", "bio", "biography", "portfolio", "profile", 
             "experience", "background", "history", "track record", "qualification", "credential",
             "achievement", "accomplishment", "education", "degree", "diploma", "certification",
             "certificate", "training", "skill", "competency", "ability", "capability", "expertise",
             "proficiency", "mastery", "strength", "talent", "aptitude", "flair", "document"
+            "resume", "cv", "curriculum vitae", "bio", "portfolio", "profile", 
+            "experience", "background", "history", "qualification", "credential"
         ],
         "interview_process": [
             "interview", "recruiter", "hiring manager", "talent acquisition", "hr", "human resources",
@@ -472,41 +762,23 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
             "developer", "engineer", "designer", "manager", "director", "analyst", "specialist",
             "consultant", "coordinator", "assistant", "associate", "lead", "senior", "junior",
             "intern", "ceo", "cto", "cfo", "vp", "head", "chief", "president", "founder"
+            "interview", "recruiter", "hiring manager", "question", "answer", "preparation", 
+            "behavioral", "technical", "screening", "assessment", "evaluation"
         ]
     }
     
     # Check if the query contains any relevant keywords
     for topic, keywords in relevant_topics.items():
-        if any(keyword.lower() in query_lower for keyword in keywords):
+        if any(keyword in query_lower for keyword in keywords):
             return True
     
-    # Additional check for general career questions that might not contain specific keywords
+    # Additional check for general career phrases
     general_career_phrases = [
         "how to get a", "how to become", "what should i do", "i need help with my", 
-        "looking for advice", "need guidance", "struggling with", "tips for", 
-        "best practices", "ways to improve", "how do i prepare", "what's the best way",
-        "i'm interested in", "i want to work", "i'm applying", "i want to be", 
-        "i want to become", "help me with", "how can i", "should i", "would it be",
-        "is it good", "is it bad", "recommend", "suggest", "advice", "thoughts on"
+        "looking for advice", "need guidance", "struggling with", "tips for"
     ]
     
     if any(phrase in query_lower for phrase in general_career_phrases):
-        return True
-    
-    # Even more lenient - allow anything related to companies
-    company_terms = ["google", "microsoft", "apple", "amazon", "meta", "facebook", "twitter",
-                    "linkedin", "startup", "corporation", "firm", "enterprise", "organization",
-                    "employer", "tech", "company", "business", "industry"]
-    
-    if any(term in query_lower for term in company_terms):
-        return True
-    
-    # Lastly, any references to programming, coding or tech as they're likely career-related in this context
-    tech_terms = ["coding", "programming", "software", "web", "app", "development", "engineering",
-                 "javascript", "python", "java", "c++", "html", "css", "react", "node", "sql",
-                 "database", "cloud", "ai", "ml", "data", "frontend", "backend", "fullstack"]
-    
-    if any(term in query_lower for term in tech_terms):
         return True
     
     return False
