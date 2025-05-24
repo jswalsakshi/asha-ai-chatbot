@@ -3,6 +3,7 @@ import json
 import google.generativeai as genai
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
+import re
 
 # Import LangChain components
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -174,11 +175,30 @@ Remember to format your response with clear structure using:
         response = model.generate_content("\n".join(conversation))
         
         if response and hasattr(response, 'text'):
-            # Add to memory for future context
+        # Add to memory for future context
             memory.chat_memory.add_user_message(query)
-            memory.chat_memory.add_ai_message(response.text)
             
-            return response.text
+            # Clean response text by removing any visible formatting instructions
+            response_text = response.text
+            # Remove the formatting instruction if it appears in response
+            formatting_markers = [
+                "Remember to format your response with clear structure using:",
+                "- Markdown headings",
+                "- Tables for comparing",
+                "- Bullet points or numbered lists",
+                "- Bold text for important points",
+                "- Keep it concise and scannable"
+            ]
+            
+            for marker in formatting_markers:
+                response_text = response_text.replace(marker, "")
+            
+            # Clean up any extra newlines that might result from removing text
+            response_text = re.sub(r'\n{3,}', '\n\n', response_text)
+            response_text = response_text.strip()
+            
+            memory.chat_memory.add_ai_message(response_text)
+            return response_text
         
         return """
 ### Response Generation Issue
@@ -248,19 +268,69 @@ def generate_career_advice(query: str, context: Optional[Dict[str, Any]] = None)
         print(f"Processing query: {query}")
         print(f"Context: {context}")
         
-        # Special handling for job listings context - these are always job-related
+        # Special handling for job listings context
         if context and context.get("type") == "job_listings":
             print("Job listing context detected")
-            # Check if this looks like a specific job interest
-            job_interest_keywords = [
-                "interested in", "tell me about", "like", "want", "apply", "yes", "more about",
-                "details", "salary", "requirements", "responsibilities", "company", "location",
-                "remote", "hybrid", "skills", "qualifications", "application", "sounds good"
-            ]
+            # Use the structured job response generator
+            if context.get("jobs"):
+                return generate_structured_job_response(query, context.get("jobs"))
+        
+        # Detect specific query types and use specialized handlers
+        query_lower = query.lower()
+        
+        # Interview preparation query
+        if any(term in query_lower for term in ["interview preparation", "interview", "prepare for interview", 
+                                              "interview question", "interview practice", "interview course", 
+                                              "mock interview", "practice interview"]):
+            print("Interview resources query detected, using specialized function")
+            return generate_interview_resources(query, context)
             
-            if any(keyword in query.lower() for keyword in job_interest_keywords):
-                print("User expressing job interest, generating structured job details response")
-                return generate_structured_job_response(query, context.get("jobs", []))
+        # Resume creation/tools query
+        if any(term in query_lower for term in ["create resume", "resume creation", "resume tool", 
+                                               "build resume", "make resume", "resume builder", 
+                                               "resume template", "cv builder", "cv creation"]):
+            print("Resume tools query detected, using specialized function")
+            return generate_resume_recommendations(query)
+            
+        # Course recommendation query
+        if any(term in query_lower for term in ["course", "learn", "study", "training", "tutorial",
+                                               "certification", "class", "education", "programming"]):
+            print("Course query detected, using specialized function")
+            return generate_course_recommendations(query)
+        
+        # Job search query - Add specific handling for job-related queries
+        job_application_keywords = ["job", "jobs", "position", "opening", "hiring", "career", 
+                                  "opportunity", "apply", "application", "companies", "employer",
+                                  "vacancies", "work", "employment", "recruiting", "offers"]
+                          
+        is_job_query = any(keyword in query_lower for keyword in job_application_keywords)
+        
+        if is_job_query:
+            print("Job search query detected, providing job listings with hyperlinks")
+            # Create a context that specifies we need real job links
+            job_context = {
+                "type": "job_search",
+                "need_links": True,
+                "query": query
+            }
+            
+            # Add specific instructions about including hyperlinks
+            enhanced_query = f"""
+The user is asking about job opportunities: "{query}"
+
+Please provide a response with REAL JOB LISTINGS that include:
+1. Job title
+2. Company name
+3. Location and job type
+4. ACTUAL HYPERLINKS to apply for these positions formatted as [Apply Here](URL)
+5. Brief job description and key requirements
+
+Include at least 5 real job listings from companies that are currently hiring.
+Make sure all links are properly formatted as markdown hyperlinks.
+IMPORTANT: Every job MUST have a direct application link to apply.
+"""
+            # Direct generation with enhanced instructions
+            return direct_generate_response(enhanced_query, job_context)
         
         # For other queries, check if it's a career question
         if not is_career_question(query, context):
@@ -744,6 +814,14 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
     if context and context.get("type") == "job_listings":
         return True
     
+    # Special handling for resume and course-related queries - ALWAYS consider these career-related
+    query_lower = query.lower()
+    if any(term in query_lower for term in ["resume", "cv", "curriculum", "course", "learn", "training", 
+                                           "education", "study", "certification", "skill", "interview", 
+                                           "mock", "practice question", "prepare", "interviewer", 
+                                           "behavioral", "technical", "job application"]):
+        return True
+    
     # Check for job interest phrases that might not be caught by keywords
     job_interest_phrases = [
         "interested in", "tell me more about", "more about the", "like to know more",
@@ -751,11 +829,10 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
         "like the", "would like", "about this job", "about that job", "about the position",
         "want to learn", "job description", "requirements", "qualifications", "salary",
         "sounds interesting", "company", "location", "remote", "hybrid", "onsite",
-        "prepare for", "apply for", "perfect", "good fit", "skills needed" 
+        "prepare for", "apply for", "perfect", "good fit", "skills needed",
         "want to apply", "how to apply", "yes", "please", "sure", "sounds good"
     ]
     
-    query_lower = query.lower()
     if any(phrase in query_lower for phrase in job_interest_phrases):
         return True
     
@@ -769,7 +846,7 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
             "career", "profession", "professional", "growth", "advance", "progress", "path", 
             "trajectory", "promotion", "transition", "pivot", "change", "switch", "move", 
             "advancement", "aspiration", "goal", "objective", "ambition", "direction", "success",
-            "industry", "field", "sector", "domain", "area", "discipline", "specialty"
+            "industry", "field", "sector", "domain", "area", "discipline", "specialty",
             "trajectory", "promotion", "transition", "pivot", "change", "switch"
         ],
         "job_search": [
@@ -782,16 +859,17 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
         "compensation": [
             "salary", "compensation", "pay", "wage", "income", "earning", "remuneration", "stipend", 
             "benefit", "bonus", "raise", "increment", "hike", "stock", "equity", "option", "esop",
-            "negotiate", "bargain", "discussion", "package", "offer", "counter-offer", "money"
+            "negotiate", "bargain", "discussion", "package", "offer", "counter-offer", "money",
             "application", "apply", "workplace", "company", "organization", "remote", "hybrid"
         ],
         "resume_portfolio": [
             "experience", "background", "history", "track record", "qualification", "credential",
             "achievement", "accomplishment", "education", "degree", "diploma", "certification",
             "certificate", "training", "skill", "competency", "ability", "capability", "expertise",
-            "proficiency", "mastery", "strength", "talent", "aptitude", "flair", "document"
+            "proficiency", "mastery", "strength", "talent", "aptitude", "flair", "document",
             "resume", "cv", "curriculum vitae", "bio", "portfolio", "profile", 
-            "experience", "background", "history", "qualification", "credential"
+            "experience", "background", "history", "qualification", "credential",
+            "create resume", "build resume", "make resume", "resume tool", "resume builder"
         ],
         "interview_process": [
             "interview", "recruiter", "hiring manager", "talent acquisition", "hr", "human resources",
@@ -824,7 +902,7 @@ def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> 
         "job_specific": [
             "developer", "engineer", "designer", "manager", "director", "analyst", "specialist",
             "consultant", "coordinator", "assistant", "associate", "lead", "senior", "junior",
-            "intern", "ceo", "cto", "cfo", "vp", "head", "chief", "president", "founder"
+            "intern", "ceo", "cto", "cfo", "vp", "head", "chief", "president", "founder",
             "interview", "recruiter", "hiring manager", "question", "answer", "preparation", 
             "behavioral", "technical", "screening", "assessment", "evaluation"
         ]
@@ -851,4 +929,164 @@ def reset_conversation():
     global memory
     memory = ConversationBufferMemory(return_messages=True)
 
+def generate_resume_recommendations(query: str) -> str:
+    """Generate resume recommendations with proper hyperlinks to tools and resources"""
+    
+    # Create a context object
+    context = {
+        "type": "resume_recommendation",
+        "area": "resume building",
+        "focus": "providing structured resume advice with hyperlinks to tools"
+    }
+    
+    # Create an enhanced prompt with explicit instructions about links
+    prompt = f"""
+You are a career advisor specializing in resume building.
+The user is asking about resume creation: "{query}"
+
+Your response MUST include actual hyperlinks to free resume building tools.
+
+Provide a comprehensive answer with this structure:
+1. A brief introduction to effective resume creation
+2. Key principles of modern resumes
+3. A table of FREE resume tools with these columns:
+   - Tool Name
+   - Website (use proper markdown hyperlinks: [ToolName](URL))
+   - Best Features
+   - Ideal For
+
+Include these specific free tools with their ACTUAL links:
+- Resume.io (https://resume.io/)
+- Canva Resume Builder (https://www.canva.com/create/resumes/)
+- Zety Resume Builder (https://zety.com/)
+- Resume Genius (https://resumegenius.com/)
+- CakeResume (https://www.cakeresume.com/)
+- Novoresume (https://novoresume.com/)
+- FlowCV (https://flowcv.io/)
+
+IMPORTANT:
+- Format ALL tool names as clickable markdown links
+- Make sure the links are correctly formatted
+- Use proper Markdown formatting throughout
+- Include specific resume tips relevant to the user's query
+"""
+    
+    try:
+        # Use the direct generation with the enhanced prompt
+        return direct_generate_response(prompt, context)
+    except Exception as e:
+        print(f"Error generating resume recommendations: {str(e)}")
+        # Fallback with hard-coded links
+        return """
+## Resume Creation Tools and Tips
+
+Creating an effective resume is crucial for your job search success. Here are some excellent free tools to help you build a professional resume.
+
+### Key Resume Principles
+- **Keep it concise** - 1-2 pages maximum
+- **Tailor for each job** - Match keywords from the job description
+- **Quantify achievements** - Use numbers and metrics when possible
+- **Use consistent formatting** - Maintain visual harmony
+
+### Free Resume Creation Tools
+
+| Tool | Best Features | Ideal For |
+|------|--------------|-----------|
+| [Resume.io](https://resume.io/) | User-friendly interface, ATS-optimized templates | Beginners looking for simplicity |
+| [Canva Resume Builder](https://www.canva.com/create/resumes/) | Creative designs, extensive customization | Visual/creative professionals |
+| [Zety Resume Builder](https://zety.com/) | Content suggestions, industry-specific templates | Those needing content guidance |
+| [Resume Genius](https://resumegenius.com/) | Quick generation, expert tips | Fast resume creation |
+| [FlowCV](https://flowcv.io/) | Modern templates, ATS optimization | Tech professionals |
+| [CakeResume](https://www.cakeresume.com/) | Portfolio integration, sharing options | Designers and developers |
+
+Would you like specific tips on how to structure your resume content?
+"""
+
+def generate_interview_resources(query: str, context: Optional[Dict[str, Any]] = None) -> str:
+    """Generate interview preparation resources with proper hyperlinks based on user's context"""
+    
+    # Extract context from previous conversations
+    job_context = ""
+    if context and context.get("type") == "job_listings" and context.get("jobs"):
+        jobs = context.get("jobs", [])
+        if jobs:
+            job = jobs[0]  # Get the first job
+            job_title = job.get('title', '')
+            skills_needed = ", ".join(job.get('skills', []))
+            job_context = f"Based on your interest in {job_title} positions requiring {skills_needed}, "
+    
+    # Create a custom context object
+    resource_context = {
+        "type": "interview_preparation",
+        "area": "interview skills",
+        "focus": "providing structured interview preparation resources with hyperlinks"
+    }
+    
+    # Create an enhanced prompt with explicit instructions about links
+    prompt = f"""
+You are a career coach specializing in interview preparation.
+The user is asking about interview preparation: "{query}"
+
+{job_context}provide comprehensive interview preparation advice with ACTUAL HYPERLINKS to useful resources.
+
+Structure your response with:
+1. A brief TL;DR at the top
+2. Key interview preparation strategies
+3. A table of FREE interview preparation resources with these columns:
+   - Resource Name (with proper markdown link: [Resource](URL))
+   - Focus/Topics
+   - Key Features
+   - Best For
+
+Include these specific resources with their ACTUAL hyperlinks:
+- Pramp (https://www.pramp.com/) - Free mock interviews with peers
+- Interviewing.io (https://interviewing.io/) - Anonymous practice technical interviews
+- LeetCode (https://leetcode.com/) - Technical interview preparation
+- Indeed Interview Practice (https://www.indeed.com/career-advice/interviewing) - Practice and tips
+- Glassdoor Interview Questions (https://www.glassdoor.com/Interview/) - Real interview questions
+- LinkedIn Interview Prep (https://www.linkedin.com/learning/topics/interview-prep)
+- Big Interview (https://biginterview.com/) - AI-powered mock interviews
+- InterviewBit (https://www.interviewbit.com/) - Practice problems and mock interviews
+
+IMPORTANT:
+- ALL resource links MUST be functional and properly formatted as markdown
+- Include at least 7 different resources with direct links
+- Focus on {job_context if job_context else "general"} interview preparation resources
+- Provide specific advice for technical and behavioral interviews
+- Format with clear sections, bullet points, and headers
+"""
+    
+    try:
+        # Use direct generation with the enhanced prompt
+        return direct_generate_response(prompt, resource_context)
+    except Exception as e:
+        print(f"Error generating interview preparation resources: {str(e)}")
+        # Fallback with hard-coded links
+        return """
+## Frontend Development Interview Preparation Resources
+
+**TL;DR**: Prepare with technical practice on JavaScript, frameworks (React), CSS, and behavioral questions. Use mock interview platforms and curated resources linked below.
+
+### Key Interview Preparation Strategies
+
+1. **Master JavaScript fundamentals** - This is the backbone of frontend development
+2. **Practice coding challenges** regularly - Focus on DOM manipulation and UI implementations
+3. **Study framework-specific questions** - Especially React, Angular, or Vue
+4. **Prepare for behavioral questions** - Focus on teamwork and project management examples
+5. **Schedule mock interviews** - Use the resources below for practice
+
+### Free Interview Preparation Resources
+
+| Resource | Focus | Key Features | Best For |
+|----------|-------|-------------|----------|
+| [Pramp](https://www.pramp.com/) | Technical & Behavioral | Free peer mock interviews | Realistic interview practice |
+| [LeetCode](https://leetcode.com/) | JS & Algorithm Challenges | Extensive problem library | Technical skills practice |
+| [Interviewing.io](https://interviewing.io/) | Technical Interviews | Anonymous practice with professionals | Advanced preparation |
+| [Frontend Interview Handbook](https://frontendinterviewhandbook.com/) | Frontend Specific | Comprehensive questions & answers | Frontend fundamentals |
+| [Indeed Interview Practice](https://www.indeed.com/career-advice/interviewing) | General & Technical | Common questions & sample answers | All-around preparation | 
+| [JavaScript30](https://javascript30.com/) | JavaScript Projects | Build 30 things in 30 days | Practical coding skills |
+| [React Interview Questions](https://github.com/sudheerj/reactjs-interview-questions) | React Specific | 300+ React.js questions | React framework mastery |
+
+Would you like me to recommend specific questions to prepare for, or do you want to focus on a particular aspect of frontend interviews?
+"""
     

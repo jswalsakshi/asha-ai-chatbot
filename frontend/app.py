@@ -195,6 +195,7 @@ def get_llm_service():
             "available": True,
             "generate_career_advice": llm_module.generate_career_advice,
             "generate_course_recommendations": llm_module.generate_course_recommendations,
+            "generate_interview_resources": llm_module.generate_interview_resources,
             "is_career_question": llm_module.is_career_question,
             "error": None
         }
@@ -204,6 +205,7 @@ def get_llm_service():
             "generate_career_advice": None,
             "is_career_question": None,
             "generate_course_recommendations": None,
+            "generate_interview_resources": None,
             "error": str(e)
         }
 
@@ -657,25 +659,31 @@ elif user_id:  # Only show the chat interface if logged in
                             
                             course_keywords = ["course", "courses", "learn", "learning", "tutorial", "study", "class"]
                             is_course_query = any(keyword in user_input.lower() for keyword in course_keywords)
-            
-                            if is_course_query:
+
+                            interview_keywords = ["interview", "prepare", "preparation", "mock", "practice"]
+                            is_interview_query = any(keyword in user_input.lower() for keyword in interview_keywords)
+
+                            if is_interview_query:
+                                response = llm["generate_interview_resources"](user_input, context)
+                                #st.sidebar.success("✓ Interview resources generated")
+                            elif is_course_query:
                                 # Use the specialized course recommendation function
                                 response = llm["generate_course_recommendations"](user_input)
-                                st.sidebar.success("✓ Course recommendations generated")
+                                #st.sidebar.success("✓ Course recommendations generated")
                             else:
-                            # First check if it's a career question (if function exists)
-                                is_career_related = True
-                            if llm.get("is_career_question"):
-                                is_career_related = llm["is_career_question"](user_input, context)
-                            
-                            if is_career_related:
-                                # Call the generate_career_advice function
-                                response = llm["generate_career_advice"](user_input, context)
-                                st.sidebar.success("✓ Response generated successfully")
-                            else:
-                                response = ("I'm focused on helping with your career-related questions. "
-                                           "Could you please ask me something about your career, job search, "
-                                           "resume, interview preparation, or professional development?")
+                                # Check if it's a career question
+                                is_career_question = True
+                                if llm.get("is_career_question"):
+                                    is_career_question = llm["is_career_question"](user_input, context)
+                                
+                                # Now use the is_career_question variable within this else block
+                                if is_career_question:
+                                    # Call the generate_career_advice function
+                                    response = llm["generate_career_advice"](user_input, context)
+                                else:
+                                    response = ("I'm focused on helping with your career-related questions. "
+                                            "Could you please ask me something about your career, job search, "
+                                            "resume, interview preparation, or professional development?")
                         except Exception as e:
                             st.sidebar.error(f"Error: {str(e)}")
                             response = f"I encountered an error processing your request: {str(e)}"
@@ -685,14 +693,14 @@ elif user_id:  # Only show the chat interface if logged in
                         response = ("I'm sorry, but my advanced response service is currently unavailable. "
                                    "Here's a general response: I'm happy to help with your career journey! "
                                    "What specific questions do you have today?")
-                        st.sidebar.warning("Using fallback response system")
+                        #st.sidebar.warning("Using fallback response system")
                 else:
                     # Handle different contexts
                     if st.session_state.context == "jobs":
                         try:
                             if context and context.get("type") == "job_listings":
                                 # Debug info
-                                st.sidebar.write("Job context detected, checking for specific job mention...")
+                                #st.sidebar.write("Job context detected, checking for specific job mention...")
                                 
                                 # The user is asking about job listings already shown
                                 llm = get_llm_service()
