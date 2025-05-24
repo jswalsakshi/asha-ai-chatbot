@@ -194,6 +194,7 @@ def get_llm_service():
         return {
             "available": True,
             "generate_career_advice": llm_module.generate_career_advice,
+            "generate_course_recommendations": llm_module.generate_course_recommendations,
             "is_career_question": llm_module.is_career_question,
             "error": None
         }
@@ -202,6 +203,7 @@ def get_llm_service():
             "available": False,
             "generate_career_advice": None,
             "is_career_question": None,
+            "generate_course_recommendations": None,
             "error": str(e)
         }
 
@@ -653,8 +655,16 @@ elif user_id:  # Only show the chat interface if logged in
                             # Add debugging to sidebar
                             st.sidebar.write(f"Processing query: {user_input[:30]}...")
                             
+                            course_keywords = ["course", "courses", "learn", "learning", "tutorial", "study", "class"]
+                            is_course_query = any(keyword in user_input.lower() for keyword in course_keywords)
+            
+                            if is_course_query:
+                                # Use the specialized course recommendation function
+                                response = llm["generate_course_recommendations"](user_input)
+                                st.sidebar.success("✓ Course recommendations generated")
+                            else:
                             # First check if it's a career question (if function exists)
-                            is_career_related = True
+                                is_career_related = True
                             if llm.get("is_career_question"):
                                 is_career_related = llm["is_career_question"](user_input, context)
                             

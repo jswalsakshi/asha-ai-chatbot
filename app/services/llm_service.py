@@ -294,8 +294,9 @@ Format your response in a highly structured manner:
 - Use bullet points or numbered lists for steps/points
 - Create tables for comparative information
 - Bold important concepts
+- IMPORTANT: When mentioning courses, websites or resources, ALWAYS use Markdown hyperlinks like [Course Name](URL)
 - Keep your response concise and easy to scan
-        """
+    """
         
         print("Getting conversation chain...")
         # Try LangChain implementation first
@@ -665,6 +666,68 @@ This role provides growth opportunities toward Senior {job_title}, Team Lead, an
 
 **What specific aspect of this position would you like to explore further?**
 """
+    
+
+def generate_course_recommendations(query: str) -> str:
+    """Generate course recommendations with proper hyperlinks based on user query"""
+    
+    # Detect tech/course interests in the query
+    query_lower = query.lower()
+    
+    # Format the prompt to ensure links are included
+    prompt = f"""
+You are a career advisor specializing in tech education recommendations.
+The user is asking about courses: "{query}"
+
+Provide a comprehensive answer with the following structure:
+1. A brief TL;DR summary section at the top
+2. An explanation of the learning path for this technology
+3. A detailed table of FREE course recommendations with the following columns:
+   - Course Provider (e.g., Coursera, edX, freeCodeCamp)
+   - Course Name (with WORKING hyperlink to the actual course)
+   - Focus/Topics
+   - Key Features (what makes this course valuable)
+
+IMPORTANT: 
+- ALL LINKS MUST BE FUNCTIONAL AND PROPERLY FORMATTED AS MARKDOWN: [Course Name](https://example.com)
+- Only include FREE courses with direct links
+- Include at least 5 different course options
+- Format the response with markdown for readability
+"""
+    
+    # Use your existing function to generate the response
+    try:
+        # Create a simple context object
+        context = {
+            "type": "course_recommendation",
+            "area": "tech education",
+            "focus": "providing structured course recommendations with hyperlinks"
+        }
+        
+        # Call your existing function or API
+        return direct_generate_response(prompt, context)
+    except Exception as e:
+        print(f"Error generating course recommendations: {str(e)}")
+        # Fallback response with links
+        return """
+## Free Java Frontend Development Courses
+
+Since Java is primarily used for backend development, for frontend you'll need to learn:
+
+1. **HTML/CSS/JavaScript** - Frontend fundamentals
+2. **A JavaScript framework** - Like React, Angular or Vue.js
+3. **Connecting frontend to Java backend**
+
+### Recommended Free Courses:
+
+* [freeCodeCamp - Responsive Web Design](https://www.freecodecamp.org/learn/responsive-web-design/) - Learn HTML/CSS fundamentals
+* [freeCodeCamp - JavaScript Algorithms](https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/) - JavaScript basics
+* [Codecademy - Learn Java](https://www.codecademy.com/learn/learn-java) - Java fundamentals
+* [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Learn) - Comprehensive web development tutorials
+* [Java Brains YouTube Channel](https://www.youtube.com/c/JavaBrainsChannel) - Java and frontend tutorials
+
+Would you like me to recommend more specific courses based on your experience level?
+"""
 
 def is_career_question(query: str, context: Optional[Dict[str, Any]] = None) -> bool:
     """
@@ -787,3 +850,5 @@ def reset_conversation():
     """Clear the conversation memory"""
     global memory
     memory = ConversationBufferMemory(return_messages=True)
+
+    
